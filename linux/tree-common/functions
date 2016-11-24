@@ -148,6 +148,7 @@ has_opt() {
 }
 
 get_metadata() {
+    return "FIXME"
     for idx in $(seq -w 0 $(scw-metadata --cached TAGS)); do
 	tag=$(scw-metadata --cached TAGS_$idx)
 	if [ $(echo "$tag" | grep "^$1=") ]; then

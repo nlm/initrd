@@ -1,4 +1,4 @@
-FROM scaleway/ubuntu:arm64-wily
+FROM scaleway/ubuntu:amd64-wily
 
 RUN /usr/local/sbin/scw-builder-enter
 
@@ -8,6 +8,7 @@ RUN apt-get update          \
  && apt-get install -y      \
    curl                     \
    dropbear                 \
+   kexec-tools              \
    nfs-common               \
    ntpdate                  \
    parted                   \
@@ -19,7 +20,7 @@ RUN apt-get update          \
 
 # Install busybox-static
 RUN wget -O /tmp/busybox.deb                                                                        \
-      http://ftp.fr.debian.org/debian/pool/main/b/busybox/busybox-static_1.22.0-9+deb8u1_arm64.deb  \
+      http://ftp.fr.debian.org/debian/pool/main/b/busybox/busybox-static_1.22.0-9+deb8u1_amd64.deb  \
  && dpkg -i /tmp/busybox.deb                                                                        \
  && rm -f /tmp/busybox.deb
 
@@ -31,18 +32,18 @@ RUN wget https://raw.githubusercontent.com/moul/mbin/master/ldd-rec.pl  \
 
 
 # Fetch scw-metadata
-ENV IMAGE_TOOLS_REV=2086abd6fcd71fa215ce76cc244af90651c3c6ae
-RUN wget -O /usr/bin/scw-metadata                                                                                           \
-      https://raw.githubusercontent.com/scaleway/image-tools/${IMAGE_TOOLS_REV}/skeleton-common/usr/local/bin/scw-metadata  \
- && chmod +x /usr/bin/scw-metadata
+#ENV IMAGE_TOOLS_REV=2086abd6fcd71fa215ce76cc244af90651c3c6ae
+#RUN wget -O /usr/bin/scw-metadata                                                                                           \
+#      https://raw.githubusercontent.com/scaleway/image-tools/${IMAGE_TOOLS_REV}/skeleton-common/usr/local/bin/scw-metadata  \
+# && chmod +x /usr/bin/scw-metadata
 
 
 # Fetch static xnbd-client
-RUN mkdir -p /usr/sbin                                                                                                 \
- && wget -O /usr/sbin/xnbd-client                                                                                      \
-      https://github.com/multiarch/build-xnbd-client-static/releases/download/v1.0/armv7l-xnbd-client-static-stripped  \
- && chmod +x /usr/sbin/xnbd-client                                                                                     \
- && ln -s xnbd-client /usr/sbin/@xnbd-client
+#RUN mkdir -p /usr/sbin                                                                                                 \
+# && wget -O /usr/sbin/xnbd-client                                                                                      \
+#      https://github.com/multiarch/build-xnbd-client-static/releases/download/v1.0/x86_64-xnbd-client-static-stripped  \
+# && chmod +x /usr/sbin/xnbd-client                                                                                     \
+# && ln -s xnbd-client /usr/sbin/@xnbd-client
 
 
 # Image metadata
@@ -50,7 +51,7 @@ CMD ["cat", "/dependencies.tar"]
 
 
 # Copy local assets
-COPY ./tmp/scw-update-server-state /usr/bin/scw-update-server-state
+#COPY ./tmp/scw-update-server-state /usr/bin/scw-update-server-state
 COPY ./export-assets /usr/local/bin/
 
 
@@ -65,14 +66,11 @@ RUN export-assets \
       /lib/x86_64-linux-gnu/libnss_dns.so.2 \
       /lib/x86_64-linux-gnu/libnss_files.so.2 \
       /lib/x86_64-linux-gnu/libresolv.so.2 \
+      /sbin/kexec \
       /sbin/mkfs.btrfs \
       /sbin/mkfs.ext4 \
       /sbin/parted \
       /usr/bin/dropbearkey \
-      /usr/bin/scw-metadata \
       /usr/lib/klibc/bin/ipconfig \
-      /usr/sbin/@xnbd-client \
       /usr/sbin/dropbear \
-      /usr/sbin/ntpdate \
-      /usr/sbin/xnbd-client \
-      /usr/bin/scw-update-server-state
+      /usr/sbin/ntpdate
