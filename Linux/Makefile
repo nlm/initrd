@@ -205,10 +205,10 @@ travis_build:
 #		chroot /chroot /bin/sh
 
 
-initrd.gz:	initrd-linux-$(TARGET).gz
+initrd.gz:	initrd-Linux-$(TARGET).gz
 
 
-initrd-linux-$(TARGET).gz:	output-$(TARGET)/.clean
+initrd-Linux-$(TARGET).gz:	output-$(TARGET)/.clean
 	cd output-$(TARGET) && find . -print0 | cpio --null -o --format=newc | gzip -9 > $(shell pwd)/$@
 
 
@@ -289,7 +289,7 @@ minirootfs.tar:	minirootfs
 
 
 clean:
-	rm -rf output-$(TARGET) dependencies-$(TARGET).tar initrd-linux-$(TARGET).gz
+	rm -rf output-$(TARGET) dependencies-$(TARGET).tar initrd-Linux-$(TARGET).gz
 
 
 re: clean all
