@@ -1,0 +1,22 @@
+#!/bin/bash
+
+ARCHIVE_PATH=/dependencies.tar
+
+export_dirs()
+{
+    for dir in $@; do
+        if [ ! -d "$dir" ]; then
+            echo "$dir is not a directory" >&2
+            exit 1
+        fi
+        if ! echo "$dir" | grep -q '^/'; then
+            echo "$dir must start with /"
+            exit 1
+        fi
+    done
+    find $@ -print | sed -e 's/^\///' | tar -uf "${ARCHIVE_PATH}" -T -
+}
+
+cd /
+[ ! -e "${ARCHIVE_PATH}" ] && tar cvf "${ARCHIVE_PATH}" -T /dev/null
+export_dirs $@

@@ -3,7 +3,7 @@
 EXPORT=/dependencies.tar
 
 cd /
-tar -cf ${EXPORT} dev/null
+[ ! -e ${EXPORT} ] && tar cvf "${EXPORT}" -T /dev/null
 for bin in $@; do
     if [ ! -f $bin ]; then
 	continue
@@ -21,6 +21,5 @@ for bin in $@; do
 	tar -uf ${EXPORT} $(readlink -f $file | sed -e 's/^\///')
     done
 done
-tar --delete -f ${EXPORT} dev/null
 tar -tvf ${EXPORT}
 tar tvf /dependencies.tar | grep -q bin/busybox || (echo "Invalid tarball, no busybox found, exiting."; exit 1)

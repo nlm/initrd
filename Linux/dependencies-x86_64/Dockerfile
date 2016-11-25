@@ -1,21 +1,30 @@
-FROM scaleway/ubuntu:amd64-wily
+FROM scaleway/ubuntu:amd64-xenial
+MAINTAINER Nicolas Limage <github@xephon.org>
 
+# Prepare rootfs for builds
 RUN /usr/local/sbin/scw-builder-enter
 
-# Install dependencies
-RUN apt-get update          \
- && apt-get upgrade -y      \
- && apt-get install -y      \
-   curl                     \
-   dropbear                 \
-   kexec-tools              \
-   nfs-common               \
-   ntpdate                  \
-   parted                   \
-   btrfs-tools              \
-   udhcpc                   \
-   wget                     \
- && apt-get clean
+
+# Install packages
+COPY packages.txt /etc
+RUN apt-get -qq update \
+ && apt-get -o Dpkg::Options::='--force-confold' dist-upgrade -y
+RUN apt-get -y install \
+	curl \
+	dropbear \
+	kexec-tools \
+	nfs-common \
+	ntpdate \
+	parted \
+	btrfs-tools \
+	udhcpc \
+	wget \
+	python3 \
+	python3-pip
+
+
+# Clean packages to make image lighter
+RUN apt-get clean
 
 
 # Install busybox-static
@@ -31,46 +40,45 @@ RUN wget https://raw.githubusercontent.com/moul/mbin/master/ldd-rec.pl  \
  && chmod +x /usr/local/bin/ldd-rec.pl
 
 
-# Fetch scw-metadata
-#ENV IMAGE_TOOLS_REV=2086abd6fcd71fa215ce76cc244af90651c3c6ae
-#RUN wget -O /usr/bin/scw-metadata                                                                                           \
-#      https://raw.githubusercontent.com/scaleway/image-tools/${IMAGE_TOOLS_REV}/skeleton-common/usr/local/bin/scw-metadata  \
-# && chmod +x /usr/bin/scw-metadata
-
-
-# Fetch static xnbd-client
-#RUN mkdir -p /usr/sbin                                                                                                 \
-# && wget -O /usr/sbin/xnbd-client                                                                                      \
-#      https://github.com/multiarch/build-xnbd-client-static/releases/download/v1.0/x86_64-xnbd-client-static-stripped  \
-# && chmod +x /usr/sbin/xnbd-client                                                                                     \
-# && ln -s xnbd-client /usr/sbin/@xnbd-client
-
-
-# Image metadata
-CMD ["cat", "/dependencies.tar"]
-
-
 # Copy local assets
-#COPY ./tmp/scw-update-server-state /usr/bin/scw-update-server-state
 COPY ./export-assets /usr/local/bin/
-
-
-# Generate tarball
 RUN export-assets \
-      /bin/busybox \
-      /bin/mkfs.btrfs \
-      /lib/arm-linux-gnueabihf/libnss_dns.so.2 \
-      /lib/arm-linux-gnueabihf/libnss_files.so.2 \
-      /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
-      /lib/x86_64-linux-gnu/libc.so.6 \
-      /lib/x86_64-linux-gnu/libnss_dns.so.2 \
-      /lib/x86_64-linux-gnu/libnss_files.so.2 \
-      /lib/x86_64-linux-gnu/libresolv.so.2 \
-      /sbin/kexec \
-      /sbin/mkfs.btrfs \
-      /sbin/mkfs.ext4 \
-      /sbin/parted \
-      /usr/bin/dropbearkey \
-      /usr/lib/klibc/bin/ipconfig \
-      /usr/sbin/dropbear \
-      /usr/sbin/ntpdate
+	/bin/busybox \
+	/bin/mkfs.btrfs \
+	/lib/arm-linux-gnueabihf/libnss_dns.so.2 \
+	/lib/arm-linux-gnueabihf/libnss_files.so.2 \
+	/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \
+	/lib/x86_64-linux-gnu/libc.so.6 \
+	/lib/x86_64-linux-gnu/libnss_dns.so.2 \
+	/lib/x86_64-linux-gnu/libnss_files.so.2 \
+	/lib/x86_64-linux-gnu/libresolv.so.2 \
+	/sbin/kexec \
+	/sbin/mkfs.btrfs \
+	/sbin/mkfs.ext4 \
+	/sbin/parted \
+	/usr/bin/dropbearkey \
+	/usr/lib/klibc/bin/ipconfig \
+	/usr/sbin/dropbear \
+	/usr/sbin/ntpdate
+
+# Export some packages
+COPY ./export-pkgs /usr/local/bin/
+RUN export-pkgs \
+	python3 \
+	python3-minimal \
+	python3-pip \
+	python3-chardet \
+	python3-pkg-resources \
+	python3-requests \
+	python3-setuptools \
+	python3-six \
+	python3-wheel
+
+COPY sysassert /usr/src/sysassert
+RUN pip3 install /usr/src/sysassert
+
+COPY ./export-dirs /usr/local/bin/
+RUN export-dirs /usr/lib/python3 /usr/local/lib/python3.5
+
+# Final Command
+CMD ["cat", "/dependencies.tar"]

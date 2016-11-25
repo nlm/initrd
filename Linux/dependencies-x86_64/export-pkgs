@@ -1,0 +1,29 @@
+#!/bin/bash
+
+EXPORT=/dependencies.tar
+
+export_pkg_files()
+{
+    OLDIFS="$IFS"
+    IFS="
+"
+    for file in $(dpkg -L $@); do
+        if [ -d "$file" ]; then
+            continue
+        fi
+        echo "Selecting '$file'" >&2
+        echo "$file"
+    done | sed -e 's/^\///' | tar -uf "${EXPORT}" -T -
+    IFS="$OLDIFS"
+}
+
+export_pkgs()
+{
+    export_pkg_files $@ $(apt-cache depends --installed --recurse \
+				--no-recommends --no-suggests --no-conflicts \
+				--no-breaks --no-replaces --no-enhances $@ \
+				| grep ' Depends:' | cut -d: -f2 | sort | uniq)
+}
+
+cd /
+export_pkgs $@
